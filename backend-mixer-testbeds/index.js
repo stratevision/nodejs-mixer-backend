@@ -1,4 +1,6 @@
+require('log-timestamp');
 const WebSocketServer = require('ws').Server
+const request = require('request')
 const http = require('http')
 const https = require('https')
 const express = require('express')
@@ -180,4 +182,39 @@ const getParams = function (params) {
     });
 
     return map
+}
+
+// workaround needed to detect when streams are unpublished because a node group was destroyed 
+setInterval(() => {
+    const url = `${streamManagerHost}/streammanager/api/4.0/event/list`
+    makeGetRequest(url)
+        .then(response => {
+            const json = JSON.parse(response)
+
+            let activeStreams = {}
+            json.forEach(obj => {
+                activeStreams[`${obj.scope}/${obj.name}`] = true
+            })
+            conferenceBackend.updateStreamList(activeStreams)
+            gridCompositionBackend.updateStreamList(activeStreams)
+        }).catch(e => {
+            console.log(e)
+        })
+}, 15000)
+
+const makeGetRequest = async function (url) {
+    return new Promise((resolve, reject) => {
+        request.get(
+            url,
+            function (error, response, body) {
+                if (!error && response.statusCode < 300) {
+                    resolve(body)
+                }
+                else {
+                    console.log(error)
+                    reject(error)
+                }
+            }
+        )
+    })
 }
