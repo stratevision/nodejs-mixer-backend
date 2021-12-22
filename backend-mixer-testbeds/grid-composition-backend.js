@@ -1,4 +1,4 @@
-const request = require('request')
+const httpClient = require('./http-client')
 const streamManagerHost = process.env.SM_HOST || 'http://127.0.0.1:7000'
 const smToken = process.env.SM_TOKEN || 'abc123'
 
@@ -96,7 +96,7 @@ module.exports = {
         }
 
         let url = `${streamManagerHost}/streammanager/api/4.0/admin/nodegroup?accessToken=${smToken}`
-        makeGetRequest(url)
+        httpClient.makeGetRequest(url)
             .then(response => {
                 const json = JSON.parse(response)
                 const nodeGroupNames = json.map(obj => obj.name)
@@ -104,7 +104,7 @@ module.exports = {
                 let promises = []
                 nodeGroupNames.forEach(ng => {
                     let url = `${streamManagerHost}/streammanager/api/4.0/admin/nodegroup/${ng}/node?accessToken=${smToken}`
-                    promises.push(makeGetRequest(url))
+                    promises.push(httpClient.makeGetRequest(url))
                 })
 
                 let regionSet = new Set()
@@ -204,20 +204,42 @@ const postMixerComposition = function (mixerNodeId, eventName) {
     }
 
     const mixers = activeCompositions[eventName].mixers
+    // mixerId receives streams [..]
+    const streamsForwardedToMixer = {}
+    let mixerDetails = null
     mixers.forEach((mixer) => {
-        if (mixer.id != mixerNodeId) {
-            return
+        if (!streamsForwardedToMixer[mixer.destinationMixerName]) {
+            streamsForwardedToMixer[mixer.destinationMixerName] = []
         }
+        const list = streamsForwardedToMixer[mixer.destinationMixerName]
+        list.push(`/${mixer.path}/${mixer.streamName}`)
 
-        const streams = mixer.streams
-        if (streams && Object.hasOwnProperty.call(streams, 'muted') && Object.hasOwnProperty.call(streams, 'unmuted')) {
-            const muted = streams.muted
-            const unmuted = streams.unmuted
-            const add = [].concat(muted).concat(unmuted)
-            const id = `${mixer.id}-${eventName}`
-            postCompositionUpdateToMixer(mixerSockets[id], add, [], muted, unmuted)
+        if (mixer.id == mixerNodeId) {
+            mixerDetails = mixer
         }
     })
+    console.log('mixers', mixers)
+    console.log('streamsForwardedToMixer', streamsForwardedToMixer)
+    console.log('mixerDetails', mixerDetails)
+    if (mixerDetails) {
+        let streams = mixerDetails.streams
+        let add = []
+        let muted = []
+        let unmuted = []
+        if (streams && Object.hasOwnProperty.call(streams, 'muted') && Object.hasOwnProperty.call(streams, 'unmuted')) {
+            muted = streams.muted
+            unmuted = streams.unmuted
+            add = add.concat(muted).concat(unmuted)
+        }
+        if (streamsForwardedToMixer[mixerDetails.mixerName]) {
+            add = add.concat(streamsForwardedToMixer[mixerDetails.mixerName])
+        }
+        if (add.length > 0 || muted.length > 0 || unmuted.length > 0) {
+            const id = `${mixerDetails.id}-${eventName}`
+            postCompositionUpdateToMixer(mixerSockets[id], add, [], muted, unmuted)
+        }
+    }
+
     /*Object.keys(activeCompositions).forEach((compositionName) => {
         const composition = activeCompositions[compositionName]
         const mixers = composition.mixers
@@ -384,7 +406,7 @@ const createComposition = function (ws, message) {
         location
     }
 
-    makePostJsonRequest(url, payload)
+    httpClient.makePostJsonRequest(url, payload)
         .then((response) => {
             if (response.event != eventName) {
                 const error = `Unexpected event name returned by the stream manager: ${response.event}`
@@ -428,7 +450,7 @@ const pollStreamManagerForCompositionState = function (compositionName) {
         // call Stream Manager API to get the composition 
         const url = `${streamManagerHost}/streammanager/api/4.0/composition/${compositionName}?accessToken=${smToken}`
         console.log(url)
-        makeGetRequest(url)
+        httpClient.makeGetRequest(url)
             .then((response) => {
                 console.log(`Received response: `, response)
                 const payload = JSON.parse(response)
@@ -553,7 +575,7 @@ const destroyComposition = function (ws, message) {
 
     // call Stream Manager API to destroy the composition 
     const url = `${streamManagerHost}/streammanager/api/4.0/composition/${eventName}?accessToken=${smToken}`
-    makeDeleteRequest(url)
+    httpClient.makeDeleteRequest(url)
         .then((response) => {
             console.log(`Composition ${eventName} has been destroyed. Received response: `, JSON.stringify(response))
         })
@@ -734,61 +756,3 @@ const updateLocalCompositionStreamData = function (id, eventName, add, remove, m
 
     console.log(JSON.stringify(activeCompositions))
 }
-
-
-const makePostJsonRequest = async function (url, payload) {
-    return new Promise((resolve, reject) => {
-        request.post(
-            url,
-            {
-                json: payload
-            },
-            function (error, response, body) {
-                if (!error && response.statusCode < 300) {
-                    console.log('success')
-                    resolve(body)
-                }
-                else {
-                    console.log(error)
-                    reject(error)
-                }
-            }
-        )
-    })
-}
-
-const makeGetRequest = async function (url) {
-    return new Promise((resolve, reject) => {
-        request.get(
-            url,
-            function (error, response, body) {
-                if (!error && response.statusCode < 300) {
-                    resolve(body)
-                }
-                else {
-                    console.log(error)
-                    reject(error)
-                }
-            }
-        )
-    })
-}
-
-const makeDeleteRequest = async function (url) {
-    return new Promise((resolve, reject) => {
-        request.delete(
-            url,
-            function (error, response, body) {
-                if (!error && response.statusCode < 300) {
-                    resolve(body)
-                }
-                else {
-                    console.log(error)
-                    reject(error)
-                }
-            }
-        )
-    })
-}
-
-

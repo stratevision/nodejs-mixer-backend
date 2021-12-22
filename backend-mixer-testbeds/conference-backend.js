@@ -1,4 +1,4 @@
-const request = require('request')
+const httpClient = require('./http-client')
 const streamManagerHost = process.env.SM_HOST || 'http://127.0.0.1:7000'
 const smToken = process.env.SM_TOKEN || 'abc123'
 
@@ -123,7 +123,7 @@ module.exports = {
         }
 
         let url = `${streamManagerHost}/streammanager/api/4.0/admin/nodegroup?accessToken=${smToken}`
-        makeGetRequest(url)
+        httpClient.makeGetRequest(url)
             .then(response => {
                 const json = JSON.parse(response)
                 const nodeGroupNames = json.map(obj => obj.name)
@@ -131,7 +131,7 @@ module.exports = {
                 let promises = []
                 nodeGroupNames.forEach(ng => {
                     let url = `${streamManagerHost}/streammanager/api/4.0/admin/nodegroup/${ng}/node?accessToken=${smToken}`
-                    promises.push(makeGetRequest(url))
+                    promises.push(httpClient.makeGetRequest(url))
                 })
 
                 let regionSet = new Set()
@@ -226,7 +226,7 @@ const createComposition = function (ws, message) {
         return
     }
 
-    makePostJsonRequest(url, payload)
+    httpClient.makePostJsonRequest(url, payload)
         .then((response) => {
             if (response.event != eventName) {
                 const error = `Unexpected event name returned by the stream manager: ${response.event}`
@@ -288,7 +288,7 @@ const pollStreamManagerForCompositionState = function (compositionName) {
         // call Stream Manager API to get the composition 
         const url = `${streamManagerHost}/streammanager/api/4.0/composition/${compositionName}?accessToken=${smToken}`
         console.log(url)
-        makeGetRequest(url)
+        httpClient.makeGetRequest(url)
             .then((response) => {
                 console.log(`Received response: `, response)
                 const payload = JSON.parse(response)
@@ -414,7 +414,7 @@ const destroyComposition = function (ws, message) {
 
     // call Stream Manager API to destroy the composition 
     const url = `${streamManagerHost}/streammanager/api/4.0/composition/${eventName}?accessToken=${smToken}`
-    makeDeleteRequest(url)
+    httpClient.makeDeleteRequest(url)
         .then((response) => {
             console.log(`Composition ${eventName} has been destroyed. Received response: `, JSON.stringify(response))
         })
@@ -660,74 +660,4 @@ const sendError = function (ws, errorMessage) {
         error: errorMessage
     }
     ws.send(JSON.stringify(payload))
-}
-
-var makeRequest = function (url, body) {
-    request.post(
-        url,
-        { json: body },
-        function (error, response) {
-            if (!error && response.statusCode == 200) {
-                console.log('Client terminated')
-            }
-            else {
-                console.log(error)
-            }
-        }
-    )
-}
-
-const makePostJsonRequest = async function (url, payload) {
-    return new Promise((resolve, reject) => {
-        request.post(
-            url,
-            {
-                json: payload
-            },
-            function (error, response, body) {
-                if (!error && response.statusCode < 300) {
-                    console.log('success')
-                    resolve(body)
-                }
-                else {
-                    console.log(error)
-                    reject(error)
-                }
-            }
-        )
-    })
-}
-
-const makeGetRequest = async function (url) {
-    return new Promise((resolve, reject) => {
-        request.get(
-            url,
-            function (error, response, body) {
-                if (!error && response.statusCode < 300) {
-                    resolve(body)
-                }
-                else {
-                    console.log(error)
-                    reject(error)
-                }
-            }
-        )
-    })
-}
-
-const makeDeleteRequest = async function (url) {
-    return new Promise((resolve, reject) => {
-        request.delete(
-            url,
-            function (error, response, body) {
-                if (!error && response.statusCode < 300) {
-                    resolve(body)
-                }
-                else {
-                    console.log(error)
-                    reject(error)
-                }
-            }
-        )
-    })
 }
