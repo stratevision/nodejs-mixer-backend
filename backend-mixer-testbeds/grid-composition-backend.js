@@ -233,31 +233,13 @@ const postMixerComposition = function (mixerNodeId, eventName) {
         }
         if (streamsForwardedToMixer[mixerDetails.mixerName]) {
             add = add.concat(streamsForwardedToMixer[mixerDetails.mixerName])
+            unmuted = unmuted.concat(streamsForwardedToMixer[mixerDetails.mixerName])
         }
         if (add.length > 0 || muted.length > 0 || unmuted.length > 0) {
             const id = `${mixerDetails.id}-${eventName}`
             postCompositionUpdateToMixer(mixerSockets[id], add, [], muted, unmuted)
         }
     }
-
-    /*Object.keys(activeCompositions).forEach((compositionName) => {
-        const composition = activeCompositions[compositionName]
-        const mixers = composition.mixers
-        mixers.forEach((mixer) => {
-            const id = mixer.id
-            if (mixerId != id) {
-                return
-            }
-
-            const streams = mixer.streams
-            if (streams && Object.hasOwnProperty.call(streams, 'muted') && Object.hasOwnProperty.call(streams, 'unmuted')) {
-                const muted = streams.muted
-                const unmuted = streams.unmuted
-                const add = [].concat(muted).concat(unmuted)
-                postCompositionUpdateToMixer(mixerSockets[mixerId], add, [], muted, unmuted)
-            }
-        })
-    })*/
 }
 
 const clearWSData = function (ws) {
