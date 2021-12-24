@@ -96,8 +96,8 @@ app.post('/validateCredentials', function (request, response) {
     console.log('\nValidate call')
     console.log(request.body)
 
-    if (!request.body || !request.body.username || !request.body.password || !request.body.token) {
-        const error = 'Username, password or token not found in POST request'
+    if (!request.body || !request.body.username || !request.body.password) {
+        const error = 'Username or password not found in POST request'
         console.log(error)
         response.status(400).send(error)
         return
@@ -115,8 +115,8 @@ app.post('/invalidateCredentials', function (request, response) {
     console.log('\nInvalidate call')
     console.log(request.body)
 
-    if (!request.body || !request.body.username || !request.body.password || !request.body.token) {
-        const error = 'Username, password or token not found in POST request'
+    if (!request.body || !request.body.username || !request.body.password) {
+        const error = 'Username or password not found in POST request'
         console.log(error)
         response.status(400).send(error)
         return
