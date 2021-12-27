@@ -115,6 +115,19 @@ module.exports = {
         }
     },
 
+    updateStreamList: (activeStreams) => {
+        for (let roomKey of Object.keys(streamList)) {
+            let streams = streamList[roomKey]
+            for (let stream of streams) {
+                let key = `${roomKey}/${stream}`
+                if (!activeStreams[key]) {
+                    console.log('unregister stream ', key)
+                    module.exports.unregisterUnpublishedStream(roomKey, stream)
+                }
+            }
+        }
+    },
+
     getAndSendValidRegions: (ws) => {
         if (cachedMixerRegions) {
             console.log('Found cached Mixers in these regions', cachedMixerRegions)

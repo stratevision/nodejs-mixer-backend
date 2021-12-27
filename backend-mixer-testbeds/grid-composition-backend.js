@@ -64,7 +64,7 @@ module.exports = {
 
         Object.keys(managerSockets).forEach((key) => postActiveStreams(managerSockets[key]))
 
-        console.log(activeStreams)
+        console.log('Conference: streams', activeStreams)
     },
 
     unregisterUnpublishedStream: (room, streamName) => {
@@ -86,6 +86,22 @@ module.exports = {
         }
 
         console.log('Grid: active streams: ', activeStreams)
+    },
+
+    updateStreamList: (streamsFromSM) => {
+        for (let roomKey of Object.keys(activeStreams)) {
+            let streams = activeStreams[roomKey]
+            if (roomKey.startsWith('/')) {
+                roomKey = roomKey.substring(1)
+            }
+            for (let stream of streams) {
+                let key = `${roomKey}/${stream}`
+                if (!streamsFromSM[key]) {
+                    console.log('unregister stream ', key)
+                    module.exports.unregisterUnpublishedStream(roomKey, stream)
+                }
+            }
+        }
     },
 
     getAndSendValidRegions: (ws) => {
