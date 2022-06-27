@@ -2,14 +2,14 @@
 
 > Simple WebSocket Server for hosting Mixer Backend
 
-The Node.js-based WebSocket server provides the communication between the Stream Manager Mixer testbeds, which are used by moderators to create compositions, and the HTML5 pages with sample layouts that are loaded into Red5 Pro Mixers and are responsible for defining the layout of the composite streams. This allows for creating dynamic compositions or video conferences where live streams can be added or removed in real-time by a Manager or Host. Finally, the node.js server provides the endpoints for the round trip authentication if used.
+This Node.js-based WebSocket server provides the communication between the Stream Manager Mixer testbeds, which moderators use to create compositions, and the HTML5 pages with sample layouts that are loaded into Red5 Pro Mixers and are responsible for defining the layout of the composite streams. This allows for creating dynamic compositions or video conferences where a Manager or Host can add or remove live streams in real-time. Additionally, the node.js server can provide the endpoints for round-trip authentication if used.
 
 # Requirements
 
 * NodeJS v10+
 * NPM 6+
 
-> This project was developed with the latest NodeJS & NPM as of the time of this writing (December, 2021).
+> This project was developed with the latest NodeJS & NPM as of the time of this writing (December 2021).
 
 # Installation
 
@@ -47,12 +47,10 @@ To generate the cert, run `sudo certbot certonly --standalone --email <your-emai
 You will then need to copy the fullchain and privatekey to the cert directory of your application
 
 ```sh
-sudo cp /etc/letsencrypt/archive/<server-fqdn>/fullchain1.pem ~/<nodejs-server>/cert/certificate.crt
-sudo cp /etc/letsencrypt/archive/<server-fqdn>/privkey1.pem ~/<nodejs-server>/cert/privateKey.key
+sudo cp /etc/letsencrypt/live/<server-fqdn>/fullchain.pem ~/<nodejs-server>/cert/certificate.crt
+sudo cp /etc/letsencrypt/live/<server-fqdn>/privkey.pem ~/<nodejs-server>/cert/privateKey.key
 sudo chmod +r ~/<nodejs-server>/cert/*
 ```
-
->  (note: the number will increment as you renew, i.e., fullchain1.pem --> fullchain2.pem, etc.
 
 Your index.js file then needs to be modified with the full path to the certificate and privateKey files (replace with the appropriate paths):
 
@@ -76,3 +74,11 @@ sudo PORT=443 SM_TOKEN=<SM-API_token> SM_HOST=https://<Hostname-of-Stream-Manage
 ## Backend Mixer Testbeds
 
 The `backend-mixer-testbeds` directory is required for creating mixer compositions.
+
+## Forever Commands
+
+* `forever start`: starts a script as a daemon.
+* `forever stop`: stops the daemon script by `Id|Uid|Pid|Index|Script`.
+* `forever stopall`: stops all running scripts.
+* `forever restart`: restarts the daemon script.
+* `forever restartall`: restarts all running forever scripts.
