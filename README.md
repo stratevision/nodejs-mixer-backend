@@ -63,10 +63,13 @@ if (useSSL) {
 
 # Usage
 
+***NOTE***
+There are multiple `index.js` files. The upper level `index.js` does not support the **Grid Composition Test**. To support this test, `cd` to `~/nodejs-mixer-backend/backend-mixer-testbeds`
+
 Start the Node.js server with the following command:
 
 ```sh
-sudo PORT=443 SM_TOKEN=<SM-API_token> SM_HOST=https://<Hostname-of-Stream-Manager> CERT=<path-to-fullchain.pem> KEY=<path-to-private-key.pem> forever start index.js 
+sudo PORT=443 SM_TOKEN=<SM-API_token> SM_HOST=https://<Hostname-of-Stream-Manager> CERT=/home/ubuntu/nodejs-mixer-backend/cert/certificate.crt KEY=<path-to-fullchain.pem> forever start -w index.js
 ```
 
 > By default, if PORT is not specified, the websocket server will run on localhost:8001.
