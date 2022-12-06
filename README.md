@@ -2,7 +2,7 @@
 
 > Simple WebSocket Server for hosting Mixer Backend
 
-This Node.js-based WebSocket server provides the communication between the Stream Manager Mixer testbeds, which moderators use to create compositions, and the HTML5 pages with sample layouts that are loaded into Red5 Pro Mixers and are responsible for defining the layout of the composite streams. This allows for creating dynamic compositions or video conferences where a Manager or Host can add or remove live streams in real-time. Additionally, the node.js server can provide the endpoints for round-trip authentication if used.
+This Node.js-based WebSocket server provides the communication between the Stream Manager Mixer testbeds, which moderators use to create compositions, and the HTML5 pages with sample layouts that are loaded into Red5 Pro Mixers and are responsible for defining the layout of the composite streams. This allows for creating dynamic compositions or video conferences where a Manager or Host can add or remove live streams in real time. Additionally, the node.js server can provide the endpoints for round-trip authentication if used.
 
 # Requirements
 
@@ -69,10 +69,10 @@ There are multiple `index.js` files. The upper level `index.js` does not support
 Start the Node.js server with the following command:
 
 ```sh
-sudo PORT=443 SM_TOKEN=<SM-API_token> SM_HOST=https://<Hostname-of-Stream-Manager> CERT=/home/ubuntu/nodejs-mixer-backend/cert/certificate.crt KEY=<path-to-fullchain.pem> forever start -w index.js
+sudo PORT=443 SM_TOKEN=<SM-API_token> SM_HOST=https://<Hostname-of-Stream-Manager> CERT=<path-to-fullchain.pem> KEY=<path-to-fullchain.pem> forever start -w index.js
 ```
 
-> By default, if PORT is not specified, the websocket server will run on localhost:8001.
+> By default, if PORT is not specified, the websocket server will run on `localhost:8001`.
 
 ## Backend Mixer Testbeds
 
@@ -80,6 +80,7 @@ The `backend-mixer-testbeds` directory is required for creating mixer compositio
 
 ## Forever Commands
 
+* `forever list`: displays any running forever processes.
 * `forever start`: starts a script as a daemon.
 * `forever stop`: stops the daemon script by `Id|Uid|Pid|Index|Script`.
 * `forever stopall`: stops all running scripts.
