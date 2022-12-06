@@ -132,44 +132,30 @@ module.exports = {
         if (cachedMixerRegions) {
             console.log('Found cached Mixers in these regions', cachedMixerRegions)
             ws.send(JSON.stringify({ "type": "mixerRegions", regions: cachedMixerRegions }))
-            return
+           return
         }
 
         let url = `${streamManagerHost}/streammanager/api/4.0/admin/nodegroup?accessToken=${smToken}`
         httpClient.makeGetRequest(url)
             .then(response => {
-                const json = JSON.parse(response)
-                const nodeGroupNames = json.map(obj => obj.name)
-                console.log(nodeGroupNames)
-                let promises = []
-                nodeGroupNames.forEach(ng => {
-                    let url = `${streamManagerHost}/streammanager/api/4.0/admin/nodegroup/${ng}/node?accessToken=${smToken}`
-                    promises.push(httpClient.makeGetRequest(url))
-                })
-
+                const nodeGroups = JSON.parse(response)
                 let regionSet = new Set()
-                Promise.all(promises)
-                    .then(results => {
-                        // console.log(results)
-                        results.forEach(details => {
-                            console.log(details)
-                            let nodes = JSON.parse(details)
-                            nodes.forEach(node => {
-                                if (node.role == 'mixer') {
-                                    regionSet.add(node.availabilityZone)
-                                }
-                            })
-                        })
-
-                        let regions = Array.from(regionSet)
-                        cachedMixerRegions = regions
-                        // invalidate cache
-                        setTimeout(() => {
-                            cachedMixerRegions = null
-                        }, 60000)
-                        console.log('Found Mixers in these regions', regions)
-                        ws.send(JSON.stringify({ "type": "mixerRegions", regions }))
-                    })
+				
+ 				nodeGroups.forEach(ng => {
+					ng["regions"].forEach(r => regionSet.add(r))
+				})
+				
+			    let regions = Array.from(regionSet)
+				
+				console.log('found regions: ' + JSON.stringify(regions))
+				
+				cachedMixerRegions = regions
+				// invalidate cache
+				setTimeout(() => {
+					cachedMixerRegions = null
+				}, 60000)
+				console.log('Found Mixers in these regions', regions)
+				ws.send(JSON.stringify({ "type": "mixerRegions", regions }))
             })
     }
 }
